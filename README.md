@@ -4,8 +4,8 @@ A fast Persistent/Immutable Vector implementation based upon Clojure's. This vec
 
 This vector has the following Big-O complexity:
 
-|--------|-----------------------|
 | Action | Asymptotic Complexity |
+| -------- | ----------------------- |
 | Random Access | O(log32n) |
 | Replace | O(log32n) |
 | Append/Push | O(1) |
