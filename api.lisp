@@ -17,7 +17,7 @@
   "Append a value to a persistent vector"
   (pv-cons vec val))
 
-(defun pv-pop (vec)
+(defun pv-poplast (vec)
   (error "not implemented"))
 
 (defun pv-length (vec)

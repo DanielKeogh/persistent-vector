@@ -180,7 +180,7 @@
 (defun pv-push-tail (vec level parent tail-node)
   (with-pv (cnt shift root tail)
 	   vec
-    (let ((subidx (logand (ash (1- cnt) level) +chunk-mask+))
+    (let ((subidx (logand (ash (1- cnt) (- level)) +chunk-mask+))
 	  (ret (make-vector-node :edit (vn-edit parent)
 				 :array (copy-seq (vn-array parent))))
 	  node-to-insert)
@@ -210,15 +210,17 @@
 				  :root root
 				  :tail new-tail))
 	(let (new-root
-	      (tail-node (make-vector-node (vn-edit root) tail))
+	      (tail-node (make-vector-node :edit (vn-edit root) :array tail))
 	      (new-shift shift))
-	  (if (> (ash cnt +chunk-bit+) (ash 1 (- shift)))
+	  (if (> (ash cnt (- +chunk-bit+)) (ash 1 shift))
 	      (progn
 		(setf new-root (make-vector-node :edit (vn-edit root)))
 		(setf (aref (vn-array new-root) 0) root)
-		(setf (aref (vn-array new-root) 1) (new-path (vn-edit root) shift tail-node))
-		(incf new-shift 5))
-	      (setf new-root (pv-push-tail vec shift root tail-node)))
+		(setf (aref (vn-array new-root) 1)
+		      (new-path (vn-edit root) shift tail-node))
+		(incf new-shift +chunk-bit+))
+	      (progn
+		(setf new-root (pv-push-tail vec shift root tail-node))))
 	  (make-persistent-vector :meta meta :count (1+ cnt) :shift new-shift :root new-root :tail (vector val))))))
 
 (defun pv-do-assoc (level node i val)

@@ -20,9 +20,9 @@
 
 (test val-at
   (let ((v (pv:vec 1 2 3)))
-    (is (= 1 (pv:pv-val-at 0)))
-    (is (= 2 (pv:pv-val-at 1)))
-    (is (= 3 (pv:pv-val-at 2)))))
+    (is (= 1 (pv:pv-val-at v 0)))
+    (is (= 2 (pv:pv-val-at v 1)))
+    (is (= 3 (pv:pv-val-at v 2)))))
 
 (test pv-equal
   (is (pv:pv-equal (pv:vec 1 2 3)
