@@ -41,7 +41,7 @@
 
 (defvar *no-edit* (make-atomic-reference :val nil))
 (defvar *empty-node* (make-vector-node :edit *no-edit*))
-(defvar *empty-vector* (make-persistent-vector :count 0 :shift 5 :root *empty-node* :tail (make-array 0)))
+(defvar *empty-vector* (make-persistent-vector :count 0 :shift +chunk-bit+ :root *empty-node* :tail (make-array 0)))
 
 ;;; generics
 
@@ -120,7 +120,7 @@
 		(let ((new-root (make-vector-node :edit (vn-edit root))))
 		  (setf (aref (vn-array new-root) 0) root)
 		  (setf (aref (vn-array new-root) 1) (new-path (vn-edit root) shift new-tail))
-		  (incf shift 5)
+		  (incf shift +chunk-bit+)
 		  (setf root new-root))
 		;;else
 		(setf root (tv-push-tail vec shift root new-tail)))
@@ -167,7 +167,7 @@
 (defun create-persistent-vector (&rest items)
   (let ((len (length items)))
     (if (<= len +chunk-size+)
-	(make-persistent-vector :count len :shift 5 :root *empty-node*
+	(make-persistent-vector :count len :shift +chunk-bit+ :root *empty-node*
 				:tail (make-array len :initial-contents items))
 	(loop for ret = (pv-as-transient *empty-vector*)
 		then (tv-conj ret item)
@@ -184,7 +184,7 @@
 	  (ret (make-vector-node :edit (vn-edit parent)
 				 :array (copy-seq (vn-array parent))))
 	  node-to-insert)
-      (if (= level 5)
+      (if (= level +chunk-bit+)
 	  (setf node-to-insert tail-node)
 	  (let ((child (aref (vn-array parent) subidx)))
 	    (setf node-to-insert (if child
@@ -255,8 +255,8 @@
     (if (and (>= i 0) (< i count))
 	(if (>= i (pv-tail-off vec))
 	    tail
-	    (loop for node = root then (aref (vn-array node) (logand (ash i (- level)) +chunk-mask+))
-		  for level = shift then (- level 5)
+	    (loop for node = root then (aref (vn-array node) (logand (ash i level) +chunk-mask+))
+		  for level = shift then (- level +chunk-bit+)
 		  while (> level 0)
 		  finally (return (vn-array node))))
 	(error "index out of bounds"))))
