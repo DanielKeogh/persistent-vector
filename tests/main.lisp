@@ -48,5 +48,5 @@
 		 for v = (pv:vec i) then (pv:pv-append v i)
 		 finally (return v))))
     (is (= 10000 (pv:pv-length v)))
-    (loop for i from 0 below 10000
-	  do (is (= i (pv:pv-val-at v i))))))
+    (is (loop for i from 0 below 10000
+	      always (= i (pv:pv-val-at v i))))))

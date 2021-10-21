@@ -184,15 +184,15 @@
 	  (ret (make-vector-node :edit (vn-edit parent)
 				 :array (copy-seq (vn-array parent))))
 	  node-to-insert)
-      (if (= level +chunk-bit+)
-	  (setf node-to-insert tail-node)
-	  (let ((child (aref (vn-array parent) subidx)))
-	    (setf node-to-insert (if child
-				     (new-path (vn-edit root)
-					       (- level +chunk-bit+) tail-node)
-				     (pv-push-tail vec
-						   (- level +chunk-bit+)
-						   child tail-node)))))
+      (cond ((= level +chunk-bit+)
+	     (setf node-to-insert tail-node))
+	    (t (let ((child (aref (vn-array parent) subidx)))
+		 (setf node-to-insert (if child
+					  (pv-push-tail vec
+							(- level +chunk-bit+)
+							child tail-node)
+					  (new-path (vn-edit root)
+						    (- level +chunk-bit+) tail-node))))))
       (setf (aref (vn-array ret) subidx) node-to-insert)
       ret)))
 
@@ -255,7 +255,7 @@
     (if (and (>= i 0) (< i count))
 	(if (>= i (pv-tail-off vec))
 	    tail
-	    (loop for node = root then (aref (vn-array node) (logand (ash i level) +chunk-mask+))
+	    (loop for node = root then (aref (vn-array node) (logand (ash i (- level)) +chunk-mask+))
 		  for level = shift then (- level +chunk-bit+)
 		  while (> level 0)
 		  finally (return (vn-array node))))
