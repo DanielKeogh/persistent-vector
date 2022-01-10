@@ -24,20 +24,6 @@
     (is (= 2 (pv:v-val-at v 1)))
     (is (= 3 (pv:v-val-at v 2)))))
 
-(test v-equal
-  (is (pv:v-equal (pv:vec 1 2 3)
-		   (pv:vec 1 2 3)))
-  (is (pv:v-equal (pv:vec "1" 2 nil)
-		   (pv:vec "1" 2 nil)))
-  (is (pv:v-equal (pv:vec)
-		   (pv:vec)))
-  (is (not (pv:v-equal (pv:vec)
-			(pv:vec 1))))
-  (is (not (pv:v-equal (pv:vec 1)
-			(pv:vec))))
-  (is (not (pv:v-equal (pv:vec 1 2 3)
-			(pv:vec 3 2 1)))))
-
 (test v-append
   (is (pv:v-equal (pv:vec 1 2 3) (pv:v-append (pv:vec 1 2) 3)))
   (is (= 3 (pv:v-val-at (pv:v-append (pv:vec 1 2) 3) 2)))
