@@ -47,6 +47,9 @@
 
 (defgeneric vec-conj (vector item))
 (defgeneric vec-make-iterator (vector))
+(defgeneric vec-count (vector))
+(defgeneric vec-assoc-n (vector))
+(defgeneric vec-cons (vector))
 
 ;;; macros
 

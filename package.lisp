@@ -7,14 +7,14 @@
   (:export
    ;; Important functions
    :vec
-   :pv-append
-   :pv-poplast
-   :pv-length
-   :pv-val-at
-   :pv-set-at
-   :pv-map
-   :pv-reduce
-   :pv-equal
+   :v-append
+   :v-poplast
+   :v-length
+   :v-val-at
+   :v-set-at
+   :v-map
+   :v-reduce
+   :v-equal
    :*max-print-vec-length*
    :with-transient
 

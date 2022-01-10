@@ -20,33 +20,51 @@
 
 (test val-at
   (let ((v (pv:vec 1 2 3)))
-    (is (= 1 (pv:pv-val-at v 0)))
-    (is (= 2 (pv:pv-val-at v 1)))
-    (is (= 3 (pv:pv-val-at v 2)))))
+    (is (= 1 (pv:v-val-at v 0)))
+    (is (= 2 (pv:v-val-at v 1)))
+    (is (= 3 (pv:v-val-at v 2)))))
 
-(test pv-equal
-  (is (pv:pv-equal (pv:vec 1 2 3)
+(test v-equal
+  (is (pv:v-equal (pv:vec 1 2 3)
 		   (pv:vec 1 2 3)))
-  (is (pv:pv-equal (pv:vec "1" 2 nil)
+  (is (pv:v-equal (pv:vec "1" 2 nil)
 		   (pv:vec "1" 2 nil)))
-  (is (pv:pv-equal (pv:vec)
+  (is (pv:v-equal (pv:vec)
 		   (pv:vec)))
-  (is (not (pv:pv-equal (pv:vec)
+  (is (not (pv:v-equal (pv:vec)
 			(pv:vec 1))))
-  (is (not (pv:pv-equal (pv:vec 1)
+  (is (not (pv:v-equal (pv:vec 1)
 			(pv:vec))))
-  (is (not (pv:pv-equal (pv:vec 1 2 3)
+  (is (not (pv:v-equal (pv:vec 1 2 3)
 			(pv:vec 3 2 1)))))
 
-(test pv-append
-  (is (pv:pv-equal (pv:vec 1 2 3) (pv:pv-append (pv:vec 1 2) 3)))
-  (is (= 3 (pv:pv-val-at (pv:pv-append (pv:vec 1 2) 3) 2)))
-  (is (= 3 (pv:pv-length (pv:pv-append (pv:vec 1 2) 3)))))
+(test v-append
+  (is (pv:v-equal (pv:vec 1 2 3) (pv:v-append (pv:vec 1 2) 3)))
+  (is (= 3 (pv:v-val-at (pv:v-append (pv:vec 1 2) 3) 2)))
+  (is (= 3 (pv:v-length (pv:v-append (pv:vec 1 2) 3)))))
 
-(test pv-append-many
+(test v-append-many
   (let ((v (loop for i from 0 below 10000
-		 for v = (pv:vec i) then (pv:pv-append v i)
+		 for v = (pv:vec i) then (pv:v-append v i)
 		 finally (return v))))
-    (is (= 10000 (pv:pv-length v)))
+    (is (= 10000 (pv:v-length v)))
     (is (loop for i from 0 below 10000
-	      always (= i (pv:pv-val-at v i))))))
+	      always (= i (pv:v-val-at v i))))))
+
+(test v-equal
+  (is (pv:v-equal (pv:vec 1 2 3) (pv:vec 1 2 3)))
+  (is (pv:v-equal (pv:vec) (pv:vec)))
+  (is (pv:v-equal (pv:vec "Japan" 1 nil) (pv:vec "Japan" 1 nil)))
+  (is (not (pv:v-equal (pv:vec) (pv:vec "Japan" 1 nil))))
+  (is (not (pv:v-equal (pv:vec) (pv:vec nil))))
+  (is (not (pv:v-equal (pv:vec nil) (pv:vec))))
+  (is (not (pv:v-equal (pv:vec 3 2 1) (pv:vec 1 2 3)))))
+
+(test with-transient
+  (is (pv:v-equal (pv:vec) (pv:with-transient (v (pv:vec)))))
+  (is (pv:v-equal (pv:vec 1 2 3) (pv:with-transient (v (pv:vec 1 2 3)))))
+  (pv:with-transient (v (pv:vec))
+    (is (pv:v-equal (pv:vec) v)))
+
+  (pv:with-transient (v (pv:vec 1 2 3))
+    (is (pv:v-equal (pv:vec 1 2 3) v))))
