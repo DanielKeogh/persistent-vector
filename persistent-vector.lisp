@@ -43,7 +43,7 @@
 
 (defgeneric vec-conj (vector item))
 (defgeneric vec-count (vector))
-(defgeneric vec-assoc-n (vector))
+(defgeneric vec-assoc-n (vector n value))
 (defgeneric vec-cons (vector val))
 (defgeneric vec-val-at (vector n not-found))
 (defgeneric vec-array-for (vector n))
@@ -185,6 +185,10 @@
 
 (defmethod vec-array-for ((vec transient-vector) i)
   (tv-array-for vec i))
+
+(defmethod vec-assoc-n ((vec transient-vector) n val)
+  (error "todo")
+  )
 
 
 ;;; persistent vector impl
@@ -337,6 +341,9 @@
 
 (defmethod vec-val-at ((vec persistent-vector) n not-found)
   (pv-nth-safe vec n not-found))
+
+(defmethod vec-assoc-n ((vec persistent-vector) n val)
+  (pv-assoc-n vec n val))
 
 (defmethod vec-array-for ((vec persistent-vector) i)
   (pv-array-for vec i))
