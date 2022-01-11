@@ -16,7 +16,11 @@
 
 ;;; struct definitions
 
-(defstruct vector-trie)
+(defstruct (vector-trie (:conc-name vt-))
+  (count nil :type fixnum)
+  (shift nil :type fixnum)
+  (root nil :type vector-node)
+  (tail nil :type (simple-array t)))
 
 (defstruct (vector-node (:conc-name vn-))
   (edit nil :type (or null atomic-reference) :read-only t)
@@ -24,18 +28,10 @@
 
 (defstruct (persistent-vector (:conc-name pv-)
 			      (:include vector-trie))
-  (count nil :type fixnum :read-only t)
-  (shift nil :type fixnum :read-only t)
-  (root nil :type vector-node :read-only t)
-  (tail nil :type (simple-array t) :read-only t)
   (meta nil))
 
 (defstruct (transient-vector (:conc-name tv-)
-			     (:include vector-trie))
-  (count nil :type fixnum)
-  (shift nil :type fixnum)
-  (root nil :type vector-node)
-  (tail nil :type (simple-array t)))
+			     (:include vector-trie)))
 
 ;;; variables and constants
 
@@ -46,43 +42,44 @@
 ;;; generics
 
 (defgeneric vec-conj (vector item))
-(defgeneric vec-make-iterator (vector))
 (defgeneric vec-count (vector))
 (defgeneric vec-assoc-n (vector))
-(defgeneric vec-cons (vector))
+(defgeneric vec-cons (vector val))
+(defgeneric vec-val-at (vector n not-found))
+(defgeneric vec-array-for (vector n))
 
 ;;; macros
 
 (defmacro with-pv ((count shift root tail &optional meta) vec &body body)
-  `(with-accessors ((,count pv-count)
-		    (,shift pv-shift)
-		    (,root pv-root)
-		    (,tail pv-tail)
+  `(with-accessors ((,count vt-count)
+		    (,shift vt-shift)
+		    (,root vt-root)
+		    (,tail vt-tail)
 		    (,(or meta (gensym)) pv-meta))
       ,vec
      ,@body))
 
-(defmacro with-tv ((count shift root tail) vec &body body)
-  `(with-accessors ((,count tv-count)
-		    (,shift tv-shift)
-		    (,root tv-root)
-		    (,tail tv-tail))
+(defmacro with-vec ((count shift root tail) vec &body body)
+  `(with-accessors ((,count vt-count)
+		    (,shift vt-shift)
+		    (,root vt-root)
+		    (,tail vt-tail))
       ,vec
      ,@body))
 
 ;;; transient vector impl
 
 (defun tv-ensure-editable (vec)
-  (with-tv (count shift root tail) vec
+  (with-vec (count shift root tail) vec
     (unless (atomic-reference-val (vn-edit root))
       (error "Editting this vector is forbidden"))))
 
 (defun tv-ensure-editable-node (vec node)
-  (with-tv (count shift root tail) vec
+  (with-vec (count shift root tail) vec
     (if (eq (vn-edit root) (vn-edit node))
 	node
 	(make-vector-node :edit (vn-edit root)
-			  :array (copy-simple-array (vn-array node))))))
+			  :array (copy-seq (vn-array node))))))
 
 (defun new-path (edit level node)
   (if (= level 0)
@@ -92,7 +89,7 @@
 	r)))
 
 (defun tv-push-tail (vec level parent tail-node)
-  (with-tv (count shift root tail) vec
+  (with-vec (count shift root tail) vec
     (let* ((parent (tv-ensure-editable-node vec parent))
 	   (subidx (logand +chunk-mask+ (ash (1- count) (- level)))))
 
@@ -106,7 +103,7 @@
       parent)))
 
 (defun tv-conj (vec val)
-  (with-tv (count shift root tail) vec
+  (with-vec (count shift root tail) vec
     (tv-ensure-editable vec)
     (let ((i count))
       (if (< (- i (tv-tail-off vec)) +chunk-size+)
@@ -129,6 +126,66 @@
 		(setf root (tv-push-tail vec shift root new-tail)))
 	    (incf count)))))
   vec)
+
+(defun tv-array-for (vec i)
+  (with-vec (cnt shift root tail) vec
+    (if (and (>= i 0) (< i cnt))
+	(if (>= i (tv-tail-off vec))
+	    tail
+	    (loop for node = root then (aref (vn-array node) (logand (ash i (- level)) +chunk-mask+))
+		  for level from shift above 0 by +chunk-bit+
+		  finally (return (vn-array node))))
+	(error "index out of bounds"))))
+
+(defun tv-editable-array-for (vec i)
+  (with-vec (cnt shift root tail) vec
+    (if (and (>= i 0) (< i cnt))
+	(if (>= i (tv-tail-off vec))
+	    tail
+	    (loop for node = root then (aref (vn-array (tv-ensure-editable-node vec node))
+					     (logand (ash i (- level)) +chunk-mask+))
+		  for level from shift above 0 by +chunk-bit+
+		  finally (return (vn-array node))))
+	(error "index out of bounds"))))
+
+(defun tv-nth (vec i)
+  (tv-ensure-editable vec)
+  (aref (tv-array-for vec i)
+	(logand i +chunk-mask+)))
+
+(defun tv-val-at (vec i not-found)
+  (tv-ensure-editable vec)
+  (if (and (>= i 0) (< i (tv-count vec)))
+      (tv-nth vec i)
+      not-found))
+
+(defun pv-make-iterator (vec &optional (start 0) (end nil))
+  (with-pv (count shift root tail) vec
+    (let ((i start)
+	  (base (- start (mod start +chunk-size+)))
+	  (array (if (< start count) (pv-array-for vec start) nil))
+	  (r-end (or end count)))
+      (lambda ()
+	(when (< i r-end)
+	  (when (= (- i base) +chunk-size+)
+	    (setf array (pv-array-for vec i))
+	    (incf base +chunk-size+))
+	  (let ((element (aref array (logand i +chunk-mask+))))
+	    (incf i)
+	    (values t element)))))))
+
+(defmethod vec-count ((vec transient-vector))
+  (tv-count vec))
+
+(defmethod vec-cons ((vec transient-vector) val)
+  (tv-conj vec val))
+
+(defmethod vec-val-at ((vec transient-vector) n not-found)
+  (tv-val-at vec n not-found))
+
+(defmethod vec-array-for ((vec transient-vector) i)
+  (tv-array-for vec i))
+
 
 ;;; persistent vector impl
 
@@ -156,7 +213,7 @@
   (tail-off (tv-count vec)))
 
 (defun tv-as-persistent (vec)
-  (with-tv (count shift root tail) vec
+  (with-vec (count shift root tail) vec
     (tv-ensure-editable vec)
     (setf (atomic-reference-val (vn-edit root)) nil)
     (let* ((len (- count (tv-tail-off vec)))
@@ -272,27 +329,38 @@
       (pv-nth vec i)
       not-found))
 
-(defun pv-make-iterator (vec &optional (start 0) (end nil))
-  (with-pv (count shift root tail) vec
+(defmethod vec-count ((vec persistent-vector))
+  (pv-count vec))
+
+(defmethod vec-cons ((vec persistent-vector) val)
+  (pv-cons vec val))
+
+(defmethod vec-val-at ((vec persistent-vector) n not-found)
+  (pv-nth-safe vec n not-found))
+
+(defmethod vec-array-for ((vec persistent-vector) i)
+  (pv-array-for vec i))
+
+;; vector-trie impl
+
+(defun vec-make-iterator (vec &optional (start 0) (end nil))
+  (with-vec (count shift root tail) vec
     (let ((i start)
 	  (base (- start (mod start +chunk-size+)))
-	  (array (if (< start count) (pv-array-for vec start) nil))
+	  (array (if (< start count) (vec-array-for vec start) nil))
 	  (r-end (or end count)))
       (lambda ()
 	(when (< i r-end)
 	  (when (= (- i base) +chunk-size+)
-	    (setf array (pv-array-for vec i))
+	    (setf array (vec-array-for vec i))
 	    (incf base +chunk-size+))
 	  (let ((element (aref array (logand i +chunk-mask+))))
 	    (incf i)
 	    (values t element)))))))
 
-(defmethod vec-make-iterator ((vec persistent-vector))
-  (pv-make-iterator vec))
-
-(defmethod print-object ((vec persistent-vector) stream)
+(defmethod print-object ((vec vector-trie) stream)
   (write-char #\[ stream)
-  (loop with itr = (pv-make-iterator vec)
+  (loop with itr = (vec-make-iterator vec)
 	for (remaining val) = (multiple-value-list (funcall itr))
 	  then (list next-remaining next-val)
 	while remaining
@@ -300,3 +368,4 @@
 	do (prin1 val stream)
 	   (when next-remaining (write-char #\  stream)))
   (write-char #\] stream))
+

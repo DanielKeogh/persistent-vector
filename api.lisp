@@ -5,9 +5,14 @@
 (defun vec (&rest items)
   (apply #'create-persistent-vector items))
 
-(defun v-val-at (vec n)
-  "Get the value at the index n of a persistent vector. If the index is outside of the persistent vector's boundaries, an error will be raised"
-  (vec-val-at vec n))
+(let ((not-found (gensym)))
+  (defun v-val-at (vec n)
+    "Get the value at the index n of a persistent vector. If the index is outside of the persistent vector's boundaries, an error will be raised"
+
+    (let ((result (vec-val-at vec n not-found)))
+      (if (eq not-found result)
+	  (error "Out of bounds" vec n)
+	  result))))
 
 (defun v-set-at (vec n val)
   "Set the index of a persistent vector to a specific value. Setting the index of the (pv-length vector) will append, otherwise, setting a value outside of the persistent vector's boundaries will cause error to be raised"
@@ -26,9 +31,9 @@
 
 (defun v-equal (v1 v2 &optional (comparer #'equal))
   "Check if each element of two persistent vectors are equal."
-  (and (= (pv-length v1) (pv-length v2))
-       (loop with itr1 = (pvec-make-iterator v1)
-	     with itr2 = (pvec-make-iterator v2)
+  (and (= (v-length v1) (v-length v2))
+       (loop with itr1 = (vec-make-iterator v1)
+	     with itr2 = (vec-make-iterator v2)
 	     for (remaining1 val1) = (multiple-value-list (funcall itr1))
 	     for (remaining2 val2) = (multiple-value-list (funcall itr2))
 	     while (and remaining1 remaining2)

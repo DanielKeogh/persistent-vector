@@ -16,4 +16,3 @@
 	for src-index fixnum from src-pos
 	for dest-index fixnum from dest-start
 	do (setf (aref dest dest-index) (aref src src-index))))
-
