@@ -56,20 +56,19 @@
     (is (loop for i from 0 below 10000
 	      always (= i (pv:v-val-at v i))))))
 
-(test v-poplast
+(test v-pop-last
   (let ((v (pv:vec 1 2 3 4)))
-    (multiple-value-bind (v val) (pv:v-poplast v)
-	(is (= (pv:vec 1 2 3) v))
-	(is (= val 4)))))
+    (is (pv:v-equal (pv:vec 1 2 3) (pv:v-pop-last v)))))
 
-(test v-poplast-many
+(test v-pop-last-many
   (let* ((v1 (make-range-vec 1000))
-	 (v2 (loop for start = v1 then (pv:v-poplast start)
-		 repeat 1000)))
+	 (v2 (loop for start = v1 then (pv:v-pop-last start)
+		   repeat 1000
+		   finally (return start))))
     (is (= 1000 (pv:v-length v1)))
-    (multiple-value-bind (v val)
-	(is (= 999 (pv:v-length v)))
-	(is (= 999 val)))
+    (let ((v (pv:v-pop-last v1)))
+      (is (= 999 (pv:v-length v)))
+      (is (= 998 (pv:v-val-at v 998))))
     (is (= 0 (pv:v-length v2)))))
 
 (test v-equal

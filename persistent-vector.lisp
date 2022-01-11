@@ -47,6 +47,7 @@
 (defgeneric vec-cons (vector val))
 (defgeneric vec-val-at (vector n not-found))
 (defgeneric vec-array-for (vector n))
+(defgeneric vec-pop-last (vector))
 
 ;;; macros
 
@@ -333,6 +334,52 @@
       (pv-nth vec i)
       not-found))
 
+(defun pv-pop-tail (vec level node)
+  (with-pv (count shift root tail) vec
+    (let ((subidx (logand (ash (- count 2) (- level)) +chunk-mask+)))
+      (cond ((> level 5)
+	     (let ((new-child (pv-pop-tail vec (- level +chunk-bit+) (aref (vn-array node) subidx))))
+	       (if (and (null new-child) (= 0 subidx))
+		   nil
+		   (let* ((new-array (copy-seq (vn-array node))))
+		     (setf (aref new-array subidx) new-child)
+		     (make-vector-node :edit (vn-edit root)
+				       :array new-array)))))
+	    ((= subidx 0) nil)
+	    (t
+	     (let ((new-array (copy-seq (vn-array node))))
+	       (setf (aref new-array subidx) nil)
+	       (make-vector-node :edit (vn-edit root)
+				       :array new-array)))))))
+
+(defun pv-pop (vec)
+  (with-pv (count shift root tail meta) vec
+    (cond ((= 0 count) (error "can't pop an empty vector"))
+	  ((= 1 count) *empty-vector*)
+
+	  ((> (- count (pv-tail-off vec)) 1)
+	   (let* ((new-len (1- count))
+		  (new-tail (make-array new-len)))
+	     (array-copy tail 0 new-tail 0 new-len)
+	     (make-persistent-vector :count new-len
+				     :shift shift
+				     :root root
+				     :tail new-tail
+				     :meta meta)))
+
+	  (t
+	   (let* ((new-tail (pv-array-for vec (- count 2)))
+		  (new-root (or (pv-pop-tail vec shift root) *empty-node*))
+		  (new-shift shift))
+	     (when (and (> shift +chunk-bit+) (null (aref (vn-array new-root) 1)))
+	       (setf new-root (aref (vn-array new-root) 0)
+		     new-shift (- new-shift 5)))
+	     (make-persistent-vector :count (1- count)
+				     :shift new-shift
+				     :root new-root
+				     :tail new-tail
+				     :meta meta))))))
+
 (defmethod vec-count ((vec persistent-vector))
   (pv-count vec))
 
@@ -347,6 +394,9 @@
 
 (defmethod vec-array-for ((vec persistent-vector) i)
   (pv-array-for vec i))
+
+(defmethod vec-pop-last ((vec persistent-vector))
+  (pv-pop vec))
 
 ;; vector-trie impl
 

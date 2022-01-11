@@ -22,8 +22,8 @@
   "Append a value to a persistent vector"
   (vec-cons vec val))
 
-(defun v-poplast (vec)
-  (error "not implemented"))
+(defun v-pop-last (vec)
+  (vec-pop-last vec))
 
 (defun v-length (vec)
   "The number of elements in a persistent vector"

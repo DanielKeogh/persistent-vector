@@ -8,7 +8,7 @@
    ;; Important functions
    :vec
    :v-append
-   :v-poplast
+   :v-pop-last
    :v-length
    :v-val-at
    :v-set-at
