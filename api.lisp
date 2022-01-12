@@ -32,6 +32,7 @@
 
 (defun v-equal (v1 v2 &optional (comparer #'equal))
   "Check if each element of two persistent vectors are equal."
+  (check-type)
   (and (= (v-length v1) (v-length v2))
        (loop with itr1 = (vec-make-iterator v1)
 	     with itr2 = (vec-make-iterator v2)
@@ -41,19 +42,26 @@
 	     always (funcall comparer val1 val2))))
 
 (defun v-map (vec fn)
-  "Apply (lambda (val)) to element of a persistent vector and collect the results into a list."
+  "Apply (lambda (val)) to element of a vector and collect the results into a list."
   (loop with itr1 = (vec-make-iterator vec)
 	for (remaining val) = (multiple-value-list (funcall itr1))
 	while remaining
 	collect (funcall fn val)))
 
 (defun v-reduce (vec fn &optional start-val)
-  "Apply (lambda (aggregate val)) to aggregate all elements of a persistent vector."
+  "Apply (lambda (aggregate val)) to aggregate all elements of a vector."
   (loop with itr1 = (vec-make-iterator vec)
 	for (remaining val) = (multiple-value-list (funcall itr1))
 	while remaining
 	for result = (funcall fn start-val val) then (funcall fn result val)
 	finally (return result)))
+
+(defun v-for (vec fn)
+  "Apply (lambda (val)) to each element of a vector without aggregating the result."
+  (loop with itr = (vec-make-iterator vec)
+	for (remaining val) = (multiple-value-list (funcall itr))
+	while remaining
+	do (funcall fn val)))
 
 (defmacro with-transient ((var vector) &body body)
   "Create a transient vector from another vector and bind it to ~var. 
