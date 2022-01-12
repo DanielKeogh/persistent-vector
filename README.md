@@ -16,14 +16,14 @@ This vector has the following Big-O complexity:
 
 For convenience of using this library without conflicting with other packages, functions that transform or read from vectors are prefixed with `v-`.
 
-### Constructor
+**Constructor:**
 
 ```lisp
 (pv:vec 0 1 2 3)
 ;; [0 1 2 3]
 ```
 
-### Constructor with transience
+**Constructor with transience:**
 Use `with-transient` to build vectors quickly.
 
 All methods that work on a persistent vector will work on a transient vector by mutating it in place, but unlike the persistent vector, transient vectors are not thread safe.
@@ -35,24 +35,24 @@ All methods that work on a persistent vector will work on a transient vector by 
 ;; [0 1 2 3]
 ```
 
-### Set index
+**Set index:**
 ```lisp
 (pv:v-set-at (pv:vec 1 2 3 4) 1 "foo")
 ;; [0 "foo" 3 4]
 ```
-### Append
+**Append:**
 ```lisp
 (pv:v-append (pv:vec 1) 2)
 ;; [1 2]
 ```
 
-### Pop Last
+**Pop Last:**
 ```lisp
 (pv:v-pop-last (pv:vec 1 2 3))
 ;; [1 2]
 ```
 
-### Equality
+**Equality:**
 
 By default, equality of elements uses `equal`:
 
@@ -74,7 +74,7 @@ It can be overriden via an optional argument:
 ;; true 
 ```
 
-### Looping
+**Looping:**
 
 There are three functions provided for looping over vectors.
 
