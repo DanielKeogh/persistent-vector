@@ -38,6 +38,7 @@
 (defvar *no-edit* (make-atomic-reference :val nil))
 (defvar *empty-node* (make-vector-node :edit *no-edit*))
 (defvar *empty-vector* (make-persistent-vector :count 0 :shift +chunk-bit+ :root *empty-node* :tail (make-array 0)))
+(defvar *max-print-vec-length* 1000)
 
 ;;; generics
 
@@ -245,8 +246,7 @@
 (defmethod vec-pop-last ((vec transient-vector))
   (tv-pop-last vec))
 
-
-;;; persistent vector impl
+;;; Persistent vector impl
 
 (defun editable-root (node)
   (make-vector-node :edit (make-atomic-reference :val t)
@@ -470,13 +470,21 @@
 	    (values t element)))))))
 
 (defmethod print-object ((vec vector-trie) stream)
-  (write-char #\[ stream)
-  (loop with itr = (vec-make-iterator vec)
-	for (remaining val) = (multiple-value-list (funcall itr))
-	  then (list next-remaining next-val)
-	while remaining
-	for (next-remaining next-val) = (multiple-value-list (funcall itr))
-	do (prin1 val stream)
-	   (when next-remaining (write-char #\  stream)))
-  (write-char #\] stream))
+  (when (transient-vector-p vec)
+    (write-char #\#)
+    (write-char #\T))
+  (let ((len (vec-count vec)))
+    (if (> len *max-print-vec-length*)
+	(progn
+	  (format stream "#S(~A|length:~a)" (type-of vec) len))
+	
+	(progn (write-char #\[ stream)
+	       (loop with itr = (vec-make-iterator vec)
+		     for (remaining val) = (multiple-value-list (funcall itr))
+		       then (list next-remaining next-val)
+		     while remaining
+		     for (next-remaining next-val) = (multiple-value-list (funcall itr))
+		     do (prin1 val stream)
+			(when next-remaining (write-char #\  stream)))
+	       (write-char #\] stream)))))
 
