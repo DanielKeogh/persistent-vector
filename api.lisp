@@ -32,7 +32,6 @@
 
 (defun v-equal (v1 v2 &optional (comparer #'equal))
   "Check if each element of two persistent vectors are equal."
-  (check-type)
   (and (= (v-length v1) (v-length v2))
        (loop with itr1 = (vec-make-iterator v1)
 	     with itr2 = (vec-make-iterator v2)
@@ -67,7 +66,6 @@
   "Create a transient vector from another vector and bind it to ~var. 
 Modifications made to the transient vector will mutate the variable.
 Returns a persistent vector holding the elements of resulting transient vector."
-  (check-type vector 'persistent-vector)
   (let ((vecsym (gensym)))
     `(let* ((,vecsym (pv-as-transient ,vector))
 	    (,var ,vecsym))
