@@ -160,20 +160,46 @@
       (tv-nth vec i)
       not-found))
 
-(defun pv-make-iterator (vec &optional (start 0) (end nil))
-  (with-pv (count shift root tail) vec
-    (let ((i start)
-	  (base (- start (mod start +chunk-size+)))
-	  (array (if (< start count) (pv-array-for vec start) nil))
-	  (r-end (or end count)))
-      (lambda ()
-	(when (< i r-end)
-	  (when (= (- i base) +chunk-size+)
-	    (setf array (pv-array-for vec i))
-	    (incf base +chunk-size+))
-	  (let ((element (aref array (logand i +chunk-mask+))))
-	    (incf i)
-	    (values t element)))))))
+(defun tv-pop-tail (vec level node)
+  (with-vec (count shift root tail) vec
+    (let ((node (tv-ensure-editable-node vec node))
+	  (subidx (logand (ash (- count 2) (- level)) +chunk-mask+)))
+      (cond ((> level 5)
+	     (let ((new-child (tv-pop-tail vec
+					   (- level +chunk-bit+)
+					   (aref (vn-array node) subidx))))
+	       (when (or new-child (/= subidx 0))
+		 (setf (aref (vn-array node) subidx) new-child)
+		 node)))
+	    ((/= subidx 0)
+	     (setf (aref (vn-array node) subidx) nil)
+	     node)
+	    (:else nil)))))
+
+(defun tv-pop-last (vec)
+  (tv-ensure-editable vec)
+  (with-vec (count shift root tail) vec
+    (cond ((= count 0) (error "can't pop empty vector"))
+	  ((= count 1) (setf count 0))
+	  (:else
+	   (let ((i (1- count)))
+	     (if (> (logand i +chunk-mask+) 0)
+		 (decf count)
+		 (let ((new-tail (tv-editable-array-for vec (- count 2)))
+		       (new-root (or (tv-pop-tail vec shift root)
+				     (make-vector-node :edit (vn-edit root))))
+		       (new-shift shift))
+		   
+		   (when (and (> shift +chunk-bit+) (null (aref (vn-array new-root))))
+		     (decf new-shift 5))
+
+		   (setf root new-root
+			 shift new-shift
+			 tail new-tail
+			 count (1- count))))))))
+  vec)
+
+;; transient vector methods
 
 (defmethod vec-count ((vec transient-vector))
   (tv-count vec))
@@ -190,6 +216,9 @@
 (defmethod vec-assoc-n ((vec transient-vector) n val)
   (error "todo")
   )
+
+(defmethod vec-pop-last ((vec transient-vector))
+  (tv-pop-last vec))
 
 
 ;;; persistent vector impl
