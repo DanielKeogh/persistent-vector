@@ -6,29 +6,29 @@
   (:nicknames #:pv)
   (:export
    ;; Builders
-   :with-transient
-   :vec
-   :v-append
-   :v-pop-last
-   :v-set-at
+   #:with-transient
+   #:vec
+   #:v-append
+   #:v-pop-last
+   #:v-set-at
 
    ;; Accessors and equality
-   :v-val-at
-   :v-equal
-   :v-length
+   #:v-val-at
+   #:v-equal
+   #:v-length
 
    ;; Looping
-   :v-map
-   :v-reduce
-   :v-for
+   #:v-map
+   #:v-reduce
+   #:v-for
 
    ;; Configuration
-   :*max-print-vec-length*
+   #:*max-print-vec-length*
 
    ;; Types
-   :persistent-vector
-   :transient-vector
-   :vector-trie
-   :persistent-vector-p
-   :transient-vector-p
-   :vector-trie-p))
+   #:persistent-vector
+   #:transient-vector
+   #:vector-trie
+   #:persistent-vector-p
+   #:transient-vector-p
+   #:vector-trie-p))
