@@ -5,18 +5,25 @@
   (:use #:cl)
   (:nicknames #:pv)
   (:export
-   ;; Important functions
+   ;; Builders
+   :with-transient
    :vec
    :v-append
    :v-pop-last
-   :v-length
-   :v-val-at
    :v-set-at
+
+   ;; Accessors and equality
+   :v-val-at
+   :v-equal
+   :v-length
+
+   ;; Looping
    :v-map
    :v-reduce
-   :v-equal
+   :v-for
+
+   ;; Configuration
    :*max-print-vec-length*
-   :with-transient
 
    ;; Types
    :persistent-vector
