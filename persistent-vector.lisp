@@ -6,7 +6,7 @@
 
 (defconstant +chunk-size+ 32)
 (defconstant +chunk-mask+ (1- +chunk-size+))
-(defconstant +chunk-bit+ (round (log 32 2)))
+(defconstant +chunk-bit+ (round (log +chunk-size+ 2)))
 ;; +chunk-size+ must be a power of 2 or else #'ash tricks dont work
 (assert (= +chunk-size+ (expt 2 +chunk-bit+))) 
 
@@ -164,7 +164,7 @@
   (with-vec (count shift root tail) vec
     (let ((node (tv-ensure-editable-node vec node))
 	  (subidx (logand (ash (- count 2) (- level)) +chunk-mask+)))
-      (cond ((> level 5)
+      (cond ((> level +chunk-bit+)
 	     (let ((new-child (tv-pop-tail vec
 					   (- level +chunk-bit+)
 					   (aref (vn-array node) subidx))))
@@ -191,7 +191,7 @@
 		       (new-shift shift))
 		   
 		   (when (and (> shift +chunk-bit+) (null (aref (vn-array new-root))))
-		     (decf new-shift 5))
+		     (decf new-shift +chunk-bit+))
 
 		   (setf root new-root
 			 shift new-shift
@@ -391,7 +391,7 @@
 (defun pv-pop-tail (vec level node)
   (with-pv (count shift root tail) vec
     (let ((subidx (logand (ash (- count 2) (- level)) +chunk-mask+)))
-      (cond ((> level 5)
+      (cond ((> level +chunk-bit+)
 	     (let ((new-child (pv-pop-tail vec (- level +chunk-bit+) (aref (vn-array node) subidx))))
 	       (if (and (null new-child) (= 0 subidx))
 		   nil
@@ -427,7 +427,7 @@
 		  (new-shift shift))
 	     (when (and (> shift +chunk-bit+) (null (aref (vn-array new-root) 1)))
 	       (setf new-root (aref (vn-array new-root) 0)
-		     new-shift (- new-shift 5)))
+		     new-shift (- new-shift +chunk-bit+)))
 	     (make-persistent-vector :count (1- count)
 				     :shift new-shift
 				     :root new-root
