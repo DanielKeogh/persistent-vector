@@ -2,6 +2,8 @@
 
 (in-package :persistent-vector)
 
+(declare )
+
 (defun vec (&rest items)
   "Create a new persistent vector."
   (apply #'create-persistent-vector items))

@@ -2,6 +2,8 @@
 
 A fast Persistent/Immutable Vector implementation based upon Clojure's. This vector is also known as a 'Vector Trie'.
 
+By default, persistent-vector is immutable, but this implementation also supports transients for building vectors significantly faster.
+
 This vector has the following Big-O complexity:
 
 | Action | Asymptotic Complexity |
@@ -106,3 +108,17 @@ There are three functions provided for looping over vectors.
 	0)
 ;; 6
 ```
+
+## Thread Safety
+
+In theory the Persistent Vector is completely thread safe. This has been tested casually but never in a production system. If you ever end up using this in production code please let me know. :)
+
+## Supported Lisps
+
+This should work in all Common Lisp implementations.
+
+It has been test in SBCL and CLisp.
+
+## Benchmarking
+
+TODO.
