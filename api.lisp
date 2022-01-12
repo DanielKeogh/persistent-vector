@@ -11,7 +11,7 @@
 
     (let ((result (vec-val-at vec n not-found)))
       (if (eq not-found result)
-	  (error "Out of bounds" vec n)
+	  (error "Out of bounds")
 	  result))))
 
 (defun v-set-at (vec n val)

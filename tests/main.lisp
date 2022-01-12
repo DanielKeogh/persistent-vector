@@ -95,3 +95,41 @@
     (is (pv:v-equal (pv:vec) v)))
   (pv:with-transient (v (pv:vec 1 2 3))
     (is (pv:v-equal (pv:vec 1 2 3) v))))
+
+(test transient-set-at
+  (let* ((assertion-vec (make-range-vec 1000 (lambda (x) (* 2 x))))
+	 (r (pv:with-transient (v (make-range-vec 1000))
+	      (dotimes (i 1000)
+		(pv:v-set-at v i (* 2 i)))
+
+	      (is (pv:v-equal v assertion-vec)))))
+    (is (pv:v-equal r assertion-vec))))
+
+(test transient-append
+  (let* ((assertion-vec (make-range-vec 1000))
+	 
+	 (r (pv:with-transient (v (pv:vec))
+	      (dotimes (i 1000)
+		(pv:v-append v i))
+	      (is (pv:v-equal v assertion-vec)))))
+    (is (pv:v-equal r assertion-vec))))
+
+(test transient-pop-last
+  (let* ((assertion-vec (pv:vec 0 1 2))
+	 (r (pv:with-transient (v (make-range-vec 1000))
+	      (loop repeat 997 do
+		(pv:v-pop-last v))
+	      (is (pv:v-equal v assertion-vec))))
+	 (is (pv:v-equal r assertion-vec)))))
+
+(test transient-length
+  (pv:with-transient (v (make-range-vec 100))
+    (is (= 100 (pv:v-length v)))))
+
+(test transient-map
+  (pv:with-transient (v (make-range-vec 1000))
+    (is (equal (pv:v-map v #'identity) (loop for i below 1000 collect i)))))
+
+(test transient-reduce
+  (pv:with-transient (v (make-range-vec 1000))
+    (is (equal (pv:v-reduce v #'+ 0) (loop for i below 1000 sum i)))))
