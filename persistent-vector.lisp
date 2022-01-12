@@ -199,6 +199,32 @@
 			 count (1- count))))))))
   vec)
 
+(defun tv-do-assoc (vec level node n val)
+  (let ((node (tv-ensure-editable-node vec node)))
+    (if (= level 0)
+	(setf (aref (vn-array node) (logand n +chunk-mask+)) val)
+	(let ((subidx (logand (ash n (- level)) +chunk-mask+)))
+	  (setf (aref (vn-array node) subidx) (tv-do-assoc vec
+							   (- level +chunk-bit+)
+							   (aref (vn-array node) subidx)
+							   n
+							   val))))
+
+    node))
+
+(defun tv-assoc-n (vec n val)
+  (tv-ensure-editable vec)
+  (with-vec (count shift root tail) vec
+    (cond ((and (>= n 0) (< n count))
+	   (if (>= n (tv-tail-off vec))
+	       (setf (aref tail (logand n +chunk-mask+)) val)
+	       (setf root (tv-do-assoc vec shift root n val))))
+
+	  ((= n count) (tv-conj vec val))
+
+	  (:else (error "Index out of bounds"))))
+  vec)
+
 ;; transient vector methods
 
 (defmethod vec-count ((vec transient-vector))
@@ -214,8 +240,7 @@
   (tv-array-for vec i))
 
 (defmethod vec-assoc-n ((vec transient-vector) n val)
-  (error "todo")
-  )
+  (tv-assoc-n vec n val))
 
 (defmethod vec-pop-last ((vec transient-vector))
   (tv-pop-last vec))
