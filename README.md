@@ -24,6 +24,7 @@ For convenience of using this library without conflicting with other packages, f
 ```
 
 **Constructor with transience:**
+
 Use `with-transient` to build vectors quickly.
 
 All methods that work on a persistent vector will work on a transient vector by mutating it in place, but unlike the persistent vector, transient vectors are not thread safe.
@@ -36,17 +37,20 @@ All methods that work on a persistent vector will work on a transient vector by 
 ```
 
 **Set index:**
+
 ```lisp
 (pv:v-set-at (pv:vec 1 2 3 4) 1 "foo")
 ;; [0 "foo" 3 4]
 ```
 **Append:**
+
 ```lisp
 (pv:v-append (pv:vec 1) 2)
 ;; [1 2]
 ```
 
 **Pop Last:**
+
 ```lisp
 (pv:v-pop-last (pv:vec 1 2 3))
 ;; [1 2]
