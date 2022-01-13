@@ -121,4 +121,31 @@ It has been test in SBCL and CLisp.
 
 ## Benchmarking
 
-TODO.
+Appending 1000000 items to a vector in 150ms:
+
+```lisp
+(time (loop for i from 0 to 1000000
+		     for vec = (pv:vec) then (pv:v-append vec i)))
+;Evaluation took:
+;  0.146 seconds of real time
+;  0.146716 seconds of total run time (0.133379 user, 0.013337 system)
+;  [ Run times consist of 0.043 seconds GC time, and 0.104 seconds non-GC time. ]
+;  100.68% CPU
+;  526,666,278 processor cycles
+;  229,177,984 bytes consed
+
+```
+
+Using `with-transient` to build the vector is an order of magnitude faster:
+
+```lisp
+(time (pv:with-transient (vec (pv:vec))
+		 (dotimes (i 1000000)
+		   (pv:v-append vec i))))
+;Evaluation took:
+;  0.019 seconds of real time
+;  0.022920 seconds of total run time (0.022798 user, 0.000122 system)
+;  121.05% CPU
+;  82,677,537 processor cycles
+;  9,810,304 bytes consed
+```

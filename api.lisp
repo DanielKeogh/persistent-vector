@@ -2,7 +2,7 @@
 
 (in-package :persistent-vector)
 
-(proclaim '(optimize (speed 3) (safety 0) (debug 0)))
+(proclaim '(optimize (speed 3) (safety 1) (debug 0)))
 
 (defun vec (&rest items)
   "Create a new persistent vector."
