@@ -16,7 +16,7 @@ This vector has the following Big-O complexity:
 
 ## Usage
 
-For convenience of using this library without conflicting with other packages, functions that transform or read from vectors are prefixed with `v-`.
+For the convenience of using this library without conflicting with other packages, functions that transform or read from vectors are prefixed with `v-`.
 
 **Constructor:**
 
@@ -29,7 +29,7 @@ For convenience of using this library without conflicting with other packages, f
 
 Use `with-transient` to build vectors quickly.
 
-All methods that work on a persistent vector will work on a transient vector by mutating it in place, but unlike the persistent vector, transient vectors are not thread safe.
+All methods that work on a persistent vector will work on a transient vector by mutating it in place. Unlike the persistent vector, transient vectors are not thread safe.
 
 ```lisp
 (pv:with-transient (trans (pv:vec))
@@ -91,14 +91,14 @@ There are three functions provided for looping over vectors.
 ;; (2 4 6)
 ```
 
-`(v-for vector (lambda (x)))` is for loop over all elements in a vector.
+`(v-for vector (lambda (x)))` is for looping over all elements in a vector.
 
 ```lisp
 (pv:v-for (pv:vec 1 2 3) (lambda (x) (* 2 x)))
 ;; nil
 ```
 
-`(v-reduce vector (lambda (aggregate val)) &optional starting-agggregate)` is for aggregating values in a vector.
+`(v-reduce vector (lambda (aggregate val)) &optional starting-aggregate)` is for aggregating values in a vector.
 
 ```lisp
 (pv:v-reduce 
@@ -121,7 +121,7 @@ It has been test in SBCL and CLisp.
 
 ## Benchmarking
 
-Appending 1000000 items to a vector in 150ms:
+Appending a million items to a vector in 150ms:
 
 ```lisp
 (time (loop for i from 0 to 1000000
