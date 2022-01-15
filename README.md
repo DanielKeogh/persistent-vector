@@ -33,8 +33,8 @@ All methods that work on a persistent vector will work on a transient vector by 
 
 ```lisp
 (pv:with-transient (trans (pv:vec))
-	(dotimes (x 4)
-		 (pv:pv-append trans x)))
+    (dotimes (x 4)
+         (pv:pv-append trans x)))
 ;; [0 1 2 3]
 ```
 
@@ -102,10 +102,10 @@ There are three functions provided for looping over vectors.
 
 ```lisp
 (pv:v-reduce 
-	(pv:vec 1 2 3) 
-	(lambda (aggregate val) 
-		(+ aggregate val)) 
-	0)
+    (pv:vec 1 2 3) 
+    (lambda (aggregate val) 
+        (+ aggregate val)) 
+    0)
 ;; 6
 ```
 
@@ -125,7 +125,7 @@ Appending a million items to a vector in 150ms:
 
 ```lisp
 (time (loop for i from 0 to 1000000
-		     for vec = (pv:vec) then (pv:v-append vec i)))
+             for vec = (pv:vec) then (pv:v-append vec i)))
 ;Evaluation took:
 ;  0.146 seconds of real time
 ;  0.146716 seconds of total run time (0.133379 user, 0.013337 system)
@@ -140,8 +140,8 @@ Using `with-transient` to build the vector is an order of magnitude faster:
 
 ```lisp
 (time (pv:with-transient (vec (pv:vec))
-		 (dotimes (i 1000000)
-		   (pv:v-append vec i))))
+         (dotimes (i 1000000)
+           (pv:v-append vec i))))
 ;Evaluation took:
 ;  0.019 seconds of real time
 ;  0.022920 seconds of total run time (0.022798 user, 0.000122 system)
