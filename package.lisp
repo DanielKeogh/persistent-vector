@@ -3,7 +3,6 @@
 (defpackage #:persistent-vector
   (:documentation "A fast implementation of the Persistent Vector data structure, based upon Clojure.")
   (:use #:cl)
-  (:nicknames #:pv)
   (:export
    ;; Builders
    #:with-transient
