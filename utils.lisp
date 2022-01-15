@@ -4,6 +4,9 @@
 
 (defstruct atomic-reference (val nil))
 
+(defun required-argument (name)
+  (error "Required argument ~@[~S~] missing." name))
+
 (defun equiv (v1 v2)
   (declare (optimize (speed 3) (safety 0)))
   (equal v1 v2))

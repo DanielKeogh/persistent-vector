@@ -19,16 +19,16 @@
 
 ;;; struct definitions
 
-(defstruct (vector-trie (:conc-name vt-)
-			(:constructor nil))
-  (count nil :type fixnum)
-  (shift nil :type fixnum)
-  (root nil :type vector-node)
-  (tail nil :type (simple-array t (*))))
-
 (defstruct (vector-node (:conc-name vn-))
   (edit nil :type (or null atomic-reference) :read-only t)
   (array (make-array-chunk) :type (simple-array t (*)) :read-only t))
+
+(defstruct (vector-trie (:conc-name vt-)
+			(:constructor nil))
+  (count (required-argument :count) :type fixnum)
+  (shift (required-argument :shift) :type fixnum)
+  (root (required-argument :root) :type vector-node)
+  (tail (required-argument :tail) :type (simple-array t (*))))
 
 (defstruct (persistent-vector (:conc-name pv-)
 			      (:include vector-trie)))
