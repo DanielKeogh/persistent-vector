@@ -3,22 +3,28 @@
 (defpackage #:persistent-vector
   (:documentation "A fast implementation of the Persistent Vector data structure, based upon Clojure.")
   (:use #:cl)
+  (:shadow
+   #:length
+   #:equal
+   #:append
+   #:map
+   #:reduce)
   (:export
    ;; Builders
    #:with-transient
    #:vec
-   #:v-append
-   #:v-pop-last
-   #:v-set-at
+   #:append
+   #:pop-last
+   #:set-at
 
    ;; Accessors and equality
-   #:v-val-at
-   #:v-equal
-   #:v-length
+   #:val-at
+   #:equal
+   #:length
 
    ;; Looping
-   #:v-map
-   #:v-reduce
+   #:map
+   #:reduce
    #:dovector
 
    ;; Configuration

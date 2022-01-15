@@ -9,7 +9,7 @@
 
 (defun equiv (v1 v2)
   (declare (optimize (speed 3) (safety 0)))
-  (equal v1 v2))
+  (cl:equal v1 v2))
 
 (defun array-copy (src src-pos dest dest-start length)
   (declare (optimize (speed 3) (safety 0))

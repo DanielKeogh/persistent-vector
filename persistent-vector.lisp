@@ -259,7 +259,7 @@
 (defun editable-tail (array)
   (declare (type (simple-array t (*)) array))
   (let ((ret (make-array-chunk)))
-    (array-copy array 0 ret 0 (length array))
+    (array-copy array 0 ret 0 (cl:length array))
     ret))
 
 (defun pv-as-transient (vec)
@@ -291,7 +291,7 @@
 			      :tail shorter-tail))))
 
 (defun create-persistent-vector (&rest items)
-  (let ((len (length items)))
+  (let ((len (cl:length items)))
     (if (<= len +chunk-size+)
 	(make-persistent-vector :count len :shift +chunk-bit+ :root *empty-node*
 				:tail (make-array len :initial-contents items))
@@ -326,11 +326,11 @@
 (defun pv-cons (vec val)
   (with-vec (cnt shift root tail)
 	   vec
-    (if (and (< (length tail) +chunk-size+)
+    (if (and (< (cl:length tail) +chunk-size+)
 	     (< (- cnt (pv-tail-off vec)) +chunk-size+))
-	(let ((new-tail (make-array (1+ (length tail)) :initial-element nil)))
-	  (array-copy tail 0 new-tail 0 (length tail))
-	  (setf (aref new-tail (length tail)) val)
+	(let ((new-tail (make-array (1+ (cl:length tail)) :initial-element nil)))
+	  (array-copy tail 0 new-tail 0 (cl:length tail))
+	  (setf (aref new-tail (cl:length tail)) val)
 	  (make-persistent-vector :count (1+ cnt)
 				  :shift shift
 				  :root root

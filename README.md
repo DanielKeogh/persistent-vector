@@ -16,7 +16,13 @@ This vector has the following Big-O complexity:
 
 ## Usage
 
-For the convenience of using this library without conflicting with other packages, functions that transform or read from vectors are prefixed with `v-`.
+Given that persistent-vector collides with several important function definitions in the `:common-lisp` namespace it is recommended that this library is used with a local nickname. For example, like this:
+
+```lisp
+(defpackage my-package
+    (:use #:cl)
+    (:local-nicknames (#:pv #:persistent-vector)))
+```
 
 **Constructor:**
 
@@ -34,49 +40,49 @@ All methods that work on a persistent vector will work on a transient vector by 
 ```lisp
 (pv:with-transient (trans (pv:vec))
     (dotimes (x 4)
-         (pv:pv-append trans x)))
+         (pv:append trans x)))
 ;; [0 1 2 3]
 ```
 
 **Set index:**
 
 ```lisp
-(pv:v-set-at (pv:vec 1 2 3 4) 1 "foo")
+(pv:set-at (pv:vec 1 2 3 4) 1 "foo")
 ;; [0 "foo" 3 4]
 ```
 **Append:**
 
 ```lisp
-(pv:v-append (pv:vec 1) 2)
+(pv:append (pv:vec 1) 2)
 ;; [1 2]
 ```
 
 **Pop Last:**
 
 ```lisp
-(pv:v-pop-last (pv:vec 1 2 3))
+(pv:pop-last (pv:vec 1 2 3))
 ;; [1 2]
 ```
 
 **Equality:**
 
-By default, equality of elements uses `equal`:
+By default, equality of elements uses `cl:equal`:
 
 ```lisp
-(pv:v-equal (pv:vec 1 2 3) (pv:vec 1 2 3))
+(pv:equal (pv:vec 1 2 3) (pv:vec 1 2 3))
 ;; true
 
-(pv:v-equal (pv:vec 1 2 3) (pv:vec))
+(pv:equal (pv:vec 1 2 3) (pv:vec))
 ;; false
 ```
 
 It can be overriden via an optional argument:
 
 ```lisp
-(pv:v-equal (pv:vec '(1 2) 2 3) (pv:vec '(1 2) 2 3) #'eq)
+(pv:equal (pv:vec '(1 2) 2 3) (pv:vec '(1 2) 2 3) #'eq)
 ;; false
 
-(pv:v-equal (pv:vec '(1 2) 2 3) (pv:vec '(1 2) 2 3) #'equal)
+(pv:equal (pv:vec '(1 2) 2 3) (pv:vec '(1 2) 2 3) #'equal)
 ;; true 
 ```
 
@@ -84,24 +90,25 @@ It can be overriden via an optional argument:
 
 There are three functions provided for looping over vectors.
 
-`(v-map vector (lambda (x)))` is for building new collections. It returns a linked list.
+`(map vector (lambda (x)))` is for building new collections. It returns a linked list.
 
 ```lisp
-(pv:v-map (pv:vec 1 2 3) (lambda (x) (* 2 x)))
+(pv:map (pv:vec 1 2 3) (lambda (x) (* 2 x)))
 ;; (2 4 6)
 ```
 
-`(v-for vector (lambda (x)))` is for looping over all elements in a vector.
+`(dovector (var vector) &body)` is for looping over all elements in a vector.
 
 ```lisp
-(pv:v-for (pv:vec 1 2 3) (lambda (x) (* 2 x)))
+(pv:dovector (x (pv:vec 1 2 3))
+    (* 2 x))
 ;; nil
 ```
 
-`(v-reduce vector (lambda (aggregate val)) &optional starting-aggregate)` is for aggregating values in a vector.
+`(reduce vector (lambda (aggregate val)) &optional starting-aggregate)` is for aggregating values in a vector.
 
 ```lisp
-(pv:v-reduce 
+(pv:reduce 
     (pv:vec 1 2 3) 
     (lambda (aggregate val) 
         (+ aggregate val)) 
@@ -125,7 +132,7 @@ Appending a million items to a vector in 150ms:
 
 ```lisp
 (time (loop for i from 0 to 1000000
-             for vec = (pv:vec) then (pv:v-append vec i)))
+             for vec = (pv:vec) then (pv:append vec i)))
 ;Evaluation took:
 ;  0.146 seconds of real time
 ;  0.146716 seconds of total run time (0.133379 user, 0.013337 system)
@@ -141,7 +148,7 @@ Using `with-transient` to build the vector is an order of magnitude faster:
 ```lisp
 (time (pv:with-transient (vec (pv:vec))
          (dotimes (i 1000000)
-           (pv:v-append vec i))))
+           (pv:append vec i))))
 ;Evaluation took:
 ;  0.019 seconds of real time
 ;  0.022920 seconds of total run time (0.022798 user, 0.000122 system)
