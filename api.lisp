@@ -57,12 +57,16 @@
 	for result = (funcall fn start-val val) then (funcall fn result val)
 	finally (return result)))
 
-(defun v-for (vec fn)
-  "Apply (lambda (val)) to each element of a vector without aggregating the result."
-  (loop with itr = (vec-make-iterator vec)
-	for (remaining val) = (multiple-value-list (funcall itr))
-	while remaining
-	do (funcall fn val)))
+(defmacro dovector ((var vector) &body body)
+  "Loop over each element of a vector without aggregating the result."
+  (let ((itr (gensym))
+	(remaining (gensym))
+	(val (gensym)))
+    `(loop with ,itr = (vec-make-iterator ,vector)
+	   for (,remaining ,val) = (multiple-value-list (funcall ,itr))
+	   while ,remaining
+	   do (let ((,var ,val))
+		,@body))))
 
 (defmacro with-transient ((var vector) &body body)
   "Create a transient vector from another vector and bind it to ~var. 

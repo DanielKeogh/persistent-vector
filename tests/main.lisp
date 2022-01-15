@@ -88,11 +88,11 @@
   (let ((v (make-range-vec 1000)))
     (is (equal (pv:v-reduce v #'+ 0) (loop for i below 1000 sum i)))))
 
-(test v-for
+(test dovector
   (let ((counter 0))
-    (pv:v-for (make-range-vec 10)
-	      (lambda (x) (declare (ignore x))
-		(incf counter)))
+    (pv:dovector (x (make-range-vec 10))
+      (declare (ignore x))
+      (incf counter))
     (is (= 10 counter))))
 
 (test with-transient

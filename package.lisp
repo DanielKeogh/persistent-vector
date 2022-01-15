@@ -20,7 +20,7 @@
    ;; Looping
    #:v-map
    #:v-reduce
-   #:v-for
+   #:dovector
 
    ;; Configuration
    #:*max-print-vec-length*
