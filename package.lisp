@@ -27,9 +27,6 @@
    #:reduce
    #:dovector
 
-   ;; Configuration
-   #:*max-print-vec-length*
-
    ;; Types
    #:persistent-vector
    #:transient-vector
