@@ -19,7 +19,8 @@
 
 ;;; struct definitions
 
-(defstruct (vector-trie (:conc-name vt-))
+(defstruct (vector-trie (:conc-name vt-)
+			(:constructor nil))
   (count nil :type fixnum)
   (shift nil :type fixnum)
   (root nil :type vector-node)
