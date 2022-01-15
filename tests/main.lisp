@@ -31,16 +31,16 @@
 
 (test set
   (let* ((v1 (pv:vec 1 2 3))
-         (v2 (pv:v-set-at v1 0 25)))
+	 (v2 (pv:v-set-at v1 0 25)))
     (is (= 1 (pv:v-val-at v1 0)))
     (is (= 25 (pv:v-val-at v2 0)))))
 
 (test set-many
   (let* ((v1 (make-range-vec 101))
-         (v2 (loop for i from 0 to 100
-                   for next-v = v1 then (pv:v-set-at next-v i (* 2 i))
-                   finally (return next-v)))
-         (v2-other (make-range-vec 101 (lambda (x) (* 2 x)))))
+	 (v2 (loop for i from 0 to 100
+		   for next-v = v1 then (pv:v-set-at next-v i (* 2 i))
+		   finally (return next-v)))
+	 (v2-other (make-range-vec 101 (lambda (x) (* 2 x)))))
     (is (pv:v-equal v2 v2-other))))
 
 (test v-append
@@ -50,11 +50,11 @@
 
 (test v-append-many
   (let ((v (loop for i from 0 below 10000
-                 for v = (pv:vec i) then (pv:v-append v i)
-                 finally (return v))))
+		 for v = (pv:vec i) then (pv:v-append v i)
+		 finally (return v))))
     (is (= 10000 (pv:v-length v)))
     (is (loop for i from 0 below 10000
-              always (= i (pv:v-val-at v i))))))
+	      always (= i (pv:v-val-at v i))))))
 
 (test v-pop-last
   (let ((v (pv:vec 1 2 3 4)))
@@ -62,9 +62,9 @@
 
 (test v-pop-last-many
   (let* ((v1 (make-range-vec 1000))
-         (v2 (loop for start = v1 then (pv:v-pop-last start)
-                   repeat 1000
-                   finally (return start))))
+	 (v2 (loop for start = v1 then (pv:v-pop-last start)
+		   repeat 1000
+		   finally (return start))))
     (is (= 1000 (pv:v-length v1)))
     (let ((v (pv:v-pop-last v1)))
       (is (= 999 (pv:v-length v)))
@@ -91,8 +91,8 @@
 (test v-for
   (let ((counter 0))
     (pv:v-for (make-range-vec 10)
-              (lambda (x) (declare (ignore x))
-                (incf counter)))
+	      (lambda (x) (declare (ignore x))
+		(incf counter)))
     (is (= 10 counter))))
 
 (test with-transient
@@ -105,29 +105,29 @@
 
 (test transient-set-at
   (let* ((assertion-vec (make-range-vec 1000 (lambda (x) (* 2 x))))
-         (r (pv:with-transient (v (make-range-vec 1000))
-              (dotimes (i 1000)
-                (pv:v-set-at v i (* 2 i)))
+	 (r (pv:with-transient (v (make-range-vec 1000))
+	      (dotimes (i 1000)
+		(pv:v-set-at v i (* 2 i)))
 
-              (is (pv:v-equal v assertion-vec)))))
+	      (is (pv:v-equal v assertion-vec)))))
     (is (pv:v-equal r assertion-vec))))
 
 (test transient-append
   (let* ((assertion-vec (make-range-vec 1000))
-
-         (r (pv:with-transient (v (pv:vec))
-              (dotimes (i 1000)
-                (pv:v-append v i))
-              (is (pv:v-equal v assertion-vec)))))
+	 
+	 (r (pv:with-transient (v (pv:vec))
+	      (dotimes (i 1000)
+		(pv:v-append v i))
+	      (is (pv:v-equal v assertion-vec)))))
     (is (pv:v-equal r assertion-vec))))
 
 (test transient-pop-last
   (let* ((assertion-vec (pv:vec 0 1 2))
-         (r (pv:with-transient (v (make-range-vec 1000))
-              (loop repeat 997 do
-                (pv:v-pop-last v))
-              (is (pv:v-equal v assertion-vec))))
-         (is (pv:v-equal r assertion-vec)))))
+	 (r (pv:with-transient (v (make-range-vec 1000))
+	      (loop repeat 997 do
+		(pv:v-pop-last v))
+	      (is (pv:v-equal v assertion-vec))))
+	 (is (pv:v-equal r assertion-vec)))))
 
 (test transient-length
   (pv:with-transient (v (make-range-vec 100))

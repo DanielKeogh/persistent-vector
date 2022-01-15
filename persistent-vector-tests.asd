@@ -6,6 +6,6 @@
   :license  "Eclipse 2.0"
   :depends-on (:persistent-vector :fiveam)
   :components ((:module "tests"
-                :serial t
-                :components ((:file "package")
-                             (:file "main")))))
+		:serial t
+		:components ((:file "package")
+			     (:file "main")))))
