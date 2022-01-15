@@ -230,7 +230,7 @@
 	  (:else (error "Index out of bounds"))))
   vec)
 
-;; transient vector methods
+;;; transient vector methods
 
 (defmethod vec-count ((vec transient-vector))
   (tv-count vec))
@@ -465,7 +465,7 @@
 (defmethod vec-pop-last ((vec persistent-vector))
   (pv-pop vec))
 
-;; vector-trie impl
+;;; vector-trie impl
 
 (defun vec-make-iterator (vec &optional (start 0) (end nil))
   (declare (type fixnum start))
