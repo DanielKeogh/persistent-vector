@@ -31,8 +31,7 @@
   (array (make-array-chunk) :type (simple-array t (*)) :read-only t))
 
 (defstruct (persistent-vector (:conc-name pv-)
-			      (:include vector-trie))
-  (meta nil))
+			      (:include vector-trie)))
 
 (defstruct (transient-vector (:conc-name tv-)
 			     (:include vector-trie)))
@@ -57,15 +56,6 @@
 (defgeneric vec-pop-last (vector))
 
 ;;; macros
-
-(defmacro with-pv ((count shift root tail &optional meta) vec &body body)
-  `(with-accessors ((,count vt-count)
-		    (,shift vt-shift)
-		    (,root vt-root)
-		    (,tail vt-tail)
-		    (,(or meta (gensym)) pv-meta))
-      ,vec
-     ,@body))
 
 (defmacro with-vec ((count shift root tail) vec &body body)
   `(with-accessors ((,count vt-count)
@@ -273,7 +263,7 @@
     ret))
 
 (defun pv-as-transient (vec)
-  (with-pv (count shift root tail) vec
+  (with-vec (count shift root tail) vec
     (make-transient-vector :count count :shift shift
 			   :root (editable-root root)
 			   :tail (editable-tail tail))))
@@ -315,7 +305,7 @@
 
 (defun pv-push-tail (vec level parent tail-node)
   (declare (type fixnum level))
-  (with-pv (cnt shift root tail)
+  (with-vec (cnt shift root tail)
 	   vec
     (let ((subidx (logand (ash (the fixnum (1- cnt)) (the fixnum (- level))) +chunk-mask+))
 	  (ret (make-vector-node :edit (vn-edit parent)
@@ -334,15 +324,14 @@
       ret)))
 
 (defun pv-cons (vec val)
-  (with-pv (cnt shift root tail meta)
+  (with-vec (cnt shift root tail)
 	   vec
     (if (and (< (length tail) +chunk-size+)
 	     (< (- cnt (pv-tail-off vec)) +chunk-size+))
 	(let ((new-tail (make-array (1+ (length tail)) :initial-element nil)))
 	  (array-copy tail 0 new-tail 0 (length tail))
 	  (setf (aref new-tail (length tail)) val)
-	  (make-persistent-vector :meta meta 
-				  :count (1+ cnt)
+	  (make-persistent-vector :count (1+ cnt)
 				  :shift shift
 				  :root root
 				  :tail new-tail))
@@ -359,7 +348,7 @@
 		(incf new-shift +chunk-bit+))
 	      (progn
 		(setf new-root (pv-push-tail vec shift root tail-node))))
-	  (make-persistent-vector :meta meta :count (1+ cnt) :shift new-shift :root new-root :tail (vector val))))))
+	  (make-persistent-vector :count (1+ cnt) :shift new-shift :root new-root :tail (vector val))))))
 
 (defun pv-do-assoc (level node i val)
   (declare (type fixnum level i))
@@ -373,16 +362,16 @@
 
 (defun pv-assoc-n (vec i val)
   (declare (type fixnum i))
-  (with-pv (cnt shift root tail meta)
+  (with-vec (cnt shift root tail)
 	   vec
     (cond ((and (>= i 0) (< i (pv-count vec)))
 	   (if (>= i (pv-tail-off vec))
 	       (let ((new-tail (copy-seq tail)))
 		 (setf (aref new-tail (logand i +chunk-mask+)) val)
-		 (make-persistent-vector :meta meta :count cnt
+		 (make-persistent-vector :count cnt
 					 :shift shift :root root :tail new-tail))
 	       
-	       (make-persistent-vector :meta meta :count cnt
+	       (make-persistent-vector :count cnt
 				       :shift shift :root (pv-do-assoc shift root i val)
 				       :tail tail)))
 	  ((= i cnt)
@@ -392,7 +381,7 @@
 
 (defun pv-array-for (vec i)
   (declare (type fixnum i))
-  (with-pv (count shift root tail) vec
+  (with-vec (count shift root tail) vec
     (if (and (>= i 0) (< i count))
 	(if (>= i (pv-tail-off vec))
 	    tail
@@ -414,7 +403,7 @@
 
 (defun pv-pop-tail (vec level node)
   (declare (type fixnum level))
-  (with-pv (count shift root tail) vec
+  (with-vec (count shift root tail) vec
     (let ((subidx (logand (ash (- count 2) (the fixnum (- level))) +chunk-mask+)))
       (cond ((> level +chunk-bit+)
 	     (let ((new-child (pv-pop-tail vec (- level +chunk-bit+) (aref (vn-array node) subidx))))
@@ -432,7 +421,7 @@
 				       :array new-array)))))))
 
 (defun pv-pop (vec)
-  (with-pv (count shift root tail meta) vec
+  (with-vec (count shift root tail) vec
     (cond ((= 0 count) (error "can't pop an empty vector"))
 	  ((= 1 count) *empty-vector*)
 
@@ -443,8 +432,7 @@
 	     (make-persistent-vector :count new-len
 				     :shift shift
 				     :root root
-				     :tail new-tail
-				     :meta meta)))
+				     :tail new-tail)))
 
 	  (t
 	   (let* ((new-tail (pv-array-for vec (- count 2)))
@@ -457,8 +445,7 @@
 	     (make-persistent-vector :count (1- count)
 				     :shift new-shift
 				     :root new-root
-				     :tail new-tail
-				     :meta meta))))))
+				     :tail new-tail))))))
 
 (defmethod vec-count ((vec persistent-vector))
   (pv-count vec))
