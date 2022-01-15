@@ -6,12 +6,13 @@
 
 ;;; definition utils
 
-(declaim (type fixnum +chunk-size+ +chunk-mask+ +chunk-bit+))
-(defconstant +chunk-size+ 32)
-(defconstant +chunk-mask+ (1- +chunk-size+))
-(defconstant +chunk-bit+ (round (log +chunk-size+ 2)))
-;; +chunk-size+ must be a power of 2 or else #'ash tricks dont work
-(assert (= +chunk-size+ (expt 2 +chunk-bit+))) 
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (declaim (type fixnum +chunk-size+ +chunk-mask+ +chunk-bit+))
+  (defconstant +chunk-size+ 32)
+  (defconstant +chunk-mask+ (1- +chunk-size+))
+  (defconstant +chunk-bit+ (round (log +chunk-size+ 2)))
+  ;; +chunk-size+ must be a power of 2 or else #'ash tricks dont work
+  (assert (= +chunk-size+ (expt 2 +chunk-bit+))))
 
 (defun make-array-chunk ()
   (make-array +chunk-size+ :initial-element nil))
