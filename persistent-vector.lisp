@@ -44,13 +44,7 @@
 
 ;;; generics
 
-(defgeneric vec-conj (vector item))
-(defgeneric vec-count (vector))
-(defgeneric vec-assoc-n (vector n value))
-(defgeneric vec-cons (vector val))
-(defgeneric vec-val-at (vector n not-found))
 (defgeneric vec-array-for (vector n))
-(defgeneric vec-pop-last (vector))
 
 ;;; macros
 
@@ -229,23 +223,8 @@
 
 ;;; transient vector methods
 
-(defmethod vec-count ((vec transient-vector))
-  (tv-count vec))
-
-(defmethod vec-cons ((vec transient-vector) val)
-  (tv-conj vec val))
-
-(defmethod vec-val-at ((vec transient-vector) n not-found)
-  (tv-val-at vec n not-found))
-
 (defmethod vec-array-for ((vec transient-vector) i)
   (tv-array-for vec i))
-
-(defmethod vec-assoc-n ((vec transient-vector) n val)
-  (tv-assoc-n vec n val))
-
-(defmethod vec-pop-last ((vec transient-vector))
-  (tv-pop-last vec))
 
 ;;; Persistent vector impl
 
@@ -444,23 +423,8 @@
 				     :root new-root
 				     :tail new-tail))))))
 
-(defmethod vec-count ((vec persistent-vector))
-  (pv-count vec))
-
-(defmethod vec-cons ((vec persistent-vector) val)
-  (pv-cons vec val))
-
-(defmethod vec-val-at ((vec persistent-vector) n not-found)
-  (pv-nth-safe vec n not-found))
-
-(defmethod vec-assoc-n ((vec persistent-vector) n val)
-  (pv-assoc-n vec n val))
-
 (defmethod vec-array-for ((vec persistent-vector) i)
   (pv-array-for vec i))
-
-(defmethod vec-pop-last ((vec persistent-vector))
-  (pv-pop vec))
 
 ;;; vector-trie impl
 

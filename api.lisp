@@ -11,26 +11,35 @@
 (let ((not-found (gensym)))
   (defun val-at (vec n)
     "Get the value at the index n of a persistent vector. If the index is outside of the persistent vector's boundaries, an error will be raised."
-    (let ((result (vec-val-at vec n not-found)))
+    (let ((result
+	    (typecase vec
+	      (persistent-vector (pv-nth-safe vec n not-found))
+	      (transient-vector (tv-val-at vec n not-found)))))
       (if (eq not-found result)
 	  (error "Out of bounds")
 	  result))))
 
 (defun set-at (vec n val)
   "Set the index of a persistent vector to a specific value. Setting the index of the (length vector) will append, otherwise, setting a value outside of the persistent vector's baoundaries will cause error to be raised."
-  (vec-assoc-n vec n val))
+  (typecase vec
+    (persistent-vector (pv-assoc-n vec n val))
+    (transient-vector (tv-assoc-n vec n val))))
 
 (defun append (vec val)
   "Append a value to a persistent vector."
-  (vec-cons vec val))
+  (typecase vec
+    (persistent-vector (pv-cons vec val))
+    (transient-vector (tv-conj vec val))))
 
 (defun pop-last (vec)
   "Return a new vector without the last item."
-  (vec-pop-last vec))
+  (typecase vec
+    (persistent-vector (pv-pop vec))
+    (transient-vector (tv-pop-last vec))))
 
 (defun length (vec)
   "Return the element count of a persistent vector."
-  (vec-count vec))
+  (vt-count vec))
 
 (defun equal (v1 v2 &optional (comparer #'cl:equal))
   "Check if each element of two persistent vectors are equal."
