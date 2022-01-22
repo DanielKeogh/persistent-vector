@@ -42,10 +42,6 @@
 (defvar *empty-node* (make-vector-node :edit *no-edit*))
 (defvar *empty-vector* (make-persistent-vector :count 0 :shift +chunk-bit+ :root *empty-node* :tail (make-array 0)))
 
-;;; generics
-
-(defgeneric vec-array-for (vector n))
-
 ;;; macros
 
 (defmacro with-vec ((count shift root tail) vec &body body)
@@ -96,7 +92,7 @@
   (with-vec (count shift root tail) vec
     (tv-ensure-editable vec)
     (let ((i count))
-      (if (< (the fixnum (- i (the fixnum (tv-tail-off vec)))) +chunk-size+)
+      (if (< (the fixnum (- i (the fixnum (vt-tail-off vec)))) +chunk-size+)
 	  (progn
 	    (setf (aref tail (logand i +chunk-mask+)) val)
 	    (incf count))
@@ -117,11 +113,12 @@
 	    (incf count)))))
   vec)
 
-(defun tv-array-for (vec i)
-  (declare (type fixnum i))
+(defun vt-array-for (vec i)
+  (declare (type fixnum i)
+	   (type vector-trie vec))
   (with-vec (cnt shift root tail) vec
     (if (and (>= i 0) (< i cnt))
-	(if (>= i (tv-tail-off vec))
+	(if (>= i (vt-tail-off vec))
 	    tail
 	    (loop for node = root then (aref (vn-array node) (logand (ash i (- level)) +chunk-mask+))
 		  for level from shift above 0 by +chunk-bit+
@@ -132,7 +129,7 @@
   (declare (type fixnum i))
   (with-vec (cnt shift root tail) vec
     (if (and (>= i 0) (< i cnt))
-	(if (>= i (tv-tail-off vec))
+	(if (>= i (vt-tail-off vec))
 	    tail
 	    (loop for node = root then (aref (vn-array (tv-ensure-editable-node vec node))
 					     (logand (ash i (- level)) +chunk-mask+))
@@ -212,7 +209,7 @@
   (tv-ensure-editable vec)
   (with-vec (count shift root tail) vec
     (cond ((and (>= n 0) (< n count))
-	   (if (>= n (tv-tail-off vec))
+	   (if (>= n (vt-tail-off vec))
 	       (setf (aref tail (logand n +chunk-mask+)) val)
 	       (setf root (tv-do-assoc vec shift root n val))))
 
@@ -220,11 +217,6 @@
 
 	  (:else (error "Index out of bounds"))))
   vec)
-
-;;; transient vector methods
-
-(defmethod vec-array-for ((vec transient-vector) i)
-  (tv-array-for vec i))
 
 ;;; Persistent vector impl
 
@@ -250,15 +242,15 @@
       0
       (ash (ash (1- count) (- +chunk-bit+)) +chunk-bit+)))
 
-(declaim (ftype (function (transient-vector) fixnum) tv-tail-off))
-(defun tv-tail-off (vec)
-  (tail-off (tv-count vec)))
+(declaim (ftype (function (vector-trie) fixnum) vt-tail-off))
+(defun vt-tail-off (vec)
+  (tail-off (vt-count vec)))
 
 (defun tv-as-persistent (vec)
   (with-vec (count shift root tail) vec
     (tv-ensure-editable vec)
     (setf (atomic-reference-val (vn-edit root)) nil)
-    (let* ((len (- count (tv-tail-off vec)))
+    (let* ((len (- count (vt-tail-off vec)))
 	   (shorter-tail (make-array len)))
       (array-copy tail 0 shorter-tail 0 len)
       (make-persistent-vector :count count
@@ -355,21 +347,9 @@
 	  
 	  (t (error "index out of bounds")))))
 
-(defun pv-array-for (vec i)
-  (declare (type fixnum i))
-  (with-vec (count shift root tail) vec
-    (if (and (>= i 0) (< i count))
-	(if (>= i (pv-tail-off vec))
-	    tail
-	    (loop for node = root then (aref (vn-array node) (logand (ash i (the fixnum (- level))) +chunk-mask+))
-		  for level fixnum = shift then (- level +chunk-bit+)
-		  while (> level 0)
-		  finally (return (vn-array node))))
-	(error "index out of bounds"))))
-
 (defun pv-nth (vec i)
   (declare (type fixnum i))
-  (aref (pv-array-for vec i) (logand i +chunk-mask+)))
+  (aref (vt-array-for vec i) (logand i +chunk-mask+)))
 
 (defun pv-nth-safe (vec i not-found)
   (declare (type fixnum i))
@@ -411,7 +391,7 @@
 				     :tail new-tail)))
 
 	  (t
-	   (let* ((new-tail (pv-array-for vec (- count 2)))
+	   (let* ((new-tail (vt-array-for vec (- count 2)))
 		  (new-root (or (pv-pop-tail vec shift root) *empty-node*))
 		  (new-shift shift))
 	     (declare (type fixnum new-shift))
@@ -423,9 +403,6 @@
 				     :root new-root
 				     :tail new-tail))))))
 
-(defmethod vec-array-for ((vec persistent-vector) i)
-  (pv-array-for vec i))
-
 ;;; vector-trie impl
 
 (defun vec-make-iterator (vec &optional (start 0) (end nil))
@@ -433,14 +410,14 @@
   (with-vec (count shift root tail) vec
     (let ((i start)
 	  (base (- start (mod start +chunk-size+)))
-	  (array (if (< start count) (vec-array-for vec start) nil))
+	  (array (if (< start count) (vt-array-for vec start) nil))
 	  (r-end (or end count)))
       (declare (type fixnum r-end i base)
 	       (type (or (simple-array t (*)) null) array))
       (lambda ()
 	(when (< i r-end)
 	  (when (= (- i base) +chunk-size+)
-	    (setf array (vec-array-for vec i))
+	    (setf array (vt-array-for vec i))
 	    (incf base +chunk-size+))
 	  (let ((element (aref array (logand i +chunk-mask+))))
 	    (incf i)
