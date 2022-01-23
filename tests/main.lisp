@@ -140,3 +140,8 @@
 (test transient-reduce
   (pv:with-transient (v (make-range-vec 1000))
     (is (equal (pv:reduce v #'+ 0) (loop for i below 1000 sum i)))))
+
+(pv:enable-reader-macros)
+(test reader-macros
+  (is (pv:equal (pv:vec 1 2 3) [1 2 3])))
+(pv:disable-reader-macros)

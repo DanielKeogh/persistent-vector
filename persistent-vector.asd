@@ -9,5 +9,6 @@
   :components ((:file "package")
 	       (:file "utils")
                (:file "persistent-vector")
+	       (:file "reader-macros")
 	       (:file "api")))
 

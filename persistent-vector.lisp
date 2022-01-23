@@ -423,20 +423,17 @@
 	    (incf i)
 	    (values t element)))))))
 
-(defmethod print-object ((vec vector-trie) stream)
+(defmethod print-object ((vec persistent-vector) stream)
   (declare (type stream stream))
-  (when (transient-vector-p vec)
-    (write-char #\#)
-    (write-char #\T))
-	
   (write-char #\[ stream)
   (loop with itr = (vec-make-iterator vec)
+	with print-length = (and (not *print-readably*) *print-length*)
 	for (remaining val) = (multiple-value-list (funcall itr))
 	  then (list next-remaining next-val)
 	for count from 0
 	while remaining
 	for (next-remaining next-val) = (multiple-value-list (funcall itr))
-	when (and (numberp *print-length*) (>= count *print-length*))
+	when (and (numberp print-length) (>= count print-length))
 	  do
 	     (princ "..." stream)
 	     (return)
@@ -444,4 +441,3 @@
 	do (prin1 val stream)
 	   (when next-remaining (write-char #\  stream)))
   (write-char #\] stream))
-

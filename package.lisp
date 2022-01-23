@@ -10,6 +10,7 @@
    #:map
    #:reduce)
   (:export
+   ;;; api.lisp
    ;; Builders
    #:with-transient
    #:vec
@@ -27,6 +28,12 @@
    #:reduce
    #:dovector
 
+   ;;; reader-macros.lisp
+   ;; reader-macros
+   #:enable-reader-macros
+   #:disable-reader-macros
+
+   ;;; persistent-vector.lisp
    ;; Types
    #:persistent-vector
    #:transient-vector
